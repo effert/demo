@@ -127,6 +127,7 @@ function workLoop(deadline) {
   if (!nextUnitOfWork && wipRoot) {
     commitRoot();
   }
+  // 继续监听
   requestIdleCallback(workLoop);
 }
 
@@ -205,6 +206,7 @@ function updateHostComponent(fiber) {
   reconcileChildren(fiber, fiber.props.children.flat());
 }
 
+// 每次只更新一级的fiber子树，这一个任务是不可打断的
 function performUnitOfWork(fiber) {
   const isFunctionComponent = fiber.type instanceof Function;
 
@@ -263,7 +265,7 @@ export function useState(initial) {
       props: currentRoot.props,
       alternate: currentRoot,
     };
-    nextUnitOfWork = wipRoot;
+    nextUnitOfWork = wipRoot; // 启动更新
     deletions = [];
   };
 
@@ -272,7 +274,7 @@ export function useState(initial) {
   return [hook.state, setState];
 }
 
-// 启动！
+// 开始监听！
 requestIdleCallback(workLoop);
 
 function render(element, container) {
