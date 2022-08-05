@@ -49,7 +49,7 @@ const Test = () => {
         }
       </div>
       {
-        arr.map((val, index) => <div>{index}</div>)
+        arr.map((val, index) => <div id={index}>{index}</div>)
       }
     </div>
   );
