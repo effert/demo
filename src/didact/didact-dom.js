@@ -105,8 +105,6 @@ function commitWork(fiber) {
 }
 
 function commitDeletion(fiber, domParent) {
-  console.log(1212, domParent);
-
   let prevProps = fiber.alternate ? fiber.alternate.props : {};
 
   if (fiber.dom) {
