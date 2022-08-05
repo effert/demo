@@ -3,7 +3,7 @@ let nextUnitOfWork = null;
 let wipRoot = null;
 let currentRoot = null;
 let deletions = null;
-let wipFiber = null;
+let wipFiber = null; // workInProgressFiber
 let hookIndex = null;
 
 // util function
@@ -77,6 +77,7 @@ function commitWork(fiber) {
   let domParentFiber = fiber.parent;
 
   // 因为有function component存在 所以要向上找到存在dom的fiber
+  // 函数组件对应一个 Fiber 节点，但其没有对应的 DOM 节点。因此在 commit 阶段进行DOM操作需要找到真正的父子节点。
   while (!domParentFiber.dom) {
     domParentFiber = domParentFiber.parent;
   }
@@ -196,7 +197,7 @@ function updateFunctionComponent(fiber) {
   hookIndex = 0;
   wipFiber.hooks = [];
   const children = [fiber.type(fiber.props)];
-  reconcileChildren(fiber, children.flat());
+  reconcileChildren(fiber, children.flat()); // 注意：这里函数组件的fiber是没有dom的
 }
 
 function updateHostComponent(fiber) {
