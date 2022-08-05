@@ -105,7 +105,7 @@ function commitWork(fiber) {
 }
 
 function commitDeletion(fiber, domParent) {
-  let prevProps = fiber.alternate ? fiber.alternate.props : {};
+  let prevProps = fiber.alternate ? fiber.alternate.props : {}; // todo
 
   if (fiber.dom) {
     removeEvent(fiber.dom, prevProps, {}); // 解绑事件
