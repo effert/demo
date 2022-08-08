@@ -18,7 +18,7 @@
 
 
 
-import Didact from '../src/didact';
+import Didact, { useState, useEffect } from '../src/didact';
 import DidactDom from '../src/didact/didact-dom';
 
 /** @jsx Didact.createElement */
@@ -30,10 +30,28 @@ import DidactDom from '../src/didact/didact-dom';
 //     123
 //   </div>
 // )
+
+const Child = () => {
+  useEffect(() => {
+    console.log('useEffect child');
+    return () => {
+      console.log('callback child');
+    };
+  }, []);
+  return 'child';
+};
+
 const Test = () => {
-  let [count, changeCount] = Didact.useState(0);
-  let [show, changeShow] = Didact.useState(false);
+  let [count, changeCount] = useState(0);
+  let [show, changeShow] = useState(false);
   let arr = new Array(count > 0 ? count : 0).fill(0);
+
+  useEffect(() => {
+    console.log('useEffect');
+    return () => {
+      console.log('callback');
+    };
+  }, [count, show]);
 
   return (
     <div id="foo">

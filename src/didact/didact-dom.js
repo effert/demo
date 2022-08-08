@@ -13,6 +13,7 @@ const isProperty = key =>
 const isNew = (prev, next) => key =>
   prev[key] !== next[key];
 const isGone = (prev, next) => key => !(key in next);
+const isEqualArray = (prev, next) => JSON.stringify(prev) === JSON.stringify(next);
 
 const transFormCamelCase = (str) => {
   let reg = /[A-Z]/g;
@@ -20,8 +21,6 @@ const transFormCamelCase = (str) => {
   if (matchArr) {
     for (let i of matchArr) {
       str = str.replace(i, `-${i.toLowerCase()}`);
-      console.log(212, i.toLowerCase(), str);
-
     }
   }
   return str;
@@ -90,6 +89,23 @@ function updateDom(dom, prevProps, nextProps) {
     });
 }
 
+function dispatchUseEffect(wipFiber, _hookIndex) {
+  const oldHook =
+    wipFiber.alternate &&
+    wipFiber.alternate.hooks &&
+    wipFiber.alternate.hooks[_hookIndex];
+  const hook = wipFiber && wipFiber.hooks && wipFiber.hooks[_hookIndex];
+
+  if (oldHook && hook) {
+    if (!isEqualArray(oldHook.deps, hook.deps) || !oldHook.deps || !hook.deps) {
+      return hook.handler();
+    }
+  } else if (!oldHook && hook) { // mount 阶段
+    return hook.handler();
+  }
+  return () => { };
+}
+
 function commitRoot() {
   deletions.forEach(commitWork);
   commitWork(wipRoot.child);
@@ -130,6 +146,7 @@ function commitWork(fiber) {
   } else if (fiber.effectTag === "DELETION") {
     commitDeletion(fiber, domParent);
   }
+  dispatchUseEffect(fiber, hookIndex - 1);
   commitWork(fiber.child);
   commitWork(fiber.sibling);
 }
@@ -302,6 +319,15 @@ export function useState(initial) {
   wipFiber.hooks.push(hook);
   hookIndex++;
   return [hook.state, setState];
+}
+
+export function useEffect(handler, deps) {
+  const hook = {
+    handler,
+    deps,
+  };
+  wipFiber.hooks.push(hook);
+  hookIndex++;
 }
 
 // 开始监听！

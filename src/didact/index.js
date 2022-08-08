@@ -1,4 +1,4 @@
-import { useState } from './didact-dom';
+import { useState, useEffect } from './didact-dom';
 
 function createElement(type, props, ...children) {
   return {
@@ -27,6 +27,12 @@ function createTextElement(text) {
 const Didact = {
   createElement,
   useState,
+  useEffect,
+};
+
+export {
+  useState,
+  useEffect,
 };
 
 export default Didact;
