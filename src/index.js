@@ -33,7 +33,7 @@ import DidactDom from '../src/didact/didact-dom';
 const Test = () => {
   let [count, changeCount] = Didact.useState(0);
   let [show, changeShow] = Didact.useState(false);
-  let arr = new Array(count).fill(0);
+  let arr = new Array(count > 0 ? count : 0).fill(0);
 
   return (
     <div id="foo">
