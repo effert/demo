@@ -38,7 +38,7 @@ const Child = () => {
       console.log('callback child');
     };
   }, []);
-  return 'child';
+  return <div id="child">child</div>;
 };
 
 const Test = () => {
@@ -63,7 +63,7 @@ const Test = () => {
       <b />
       <div>
         {
-          show ? 'show' : ''
+          show ? <Child /> : ''
         }
       </div>
       {

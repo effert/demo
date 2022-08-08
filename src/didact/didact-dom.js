@@ -89,7 +89,7 @@ function updateDom(dom, prevProps, nextProps) {
     });
 }
 
-function dispatchUseEffect(wipFiber, _hookIndex) {
+function dispatchSingleEffect(wipFiber, _hookIndex) {
   const oldHook =
     wipFiber.alternate &&
     wipFiber.alternate.hooks &&
@@ -104,6 +104,19 @@ function dispatchUseEffect(wipFiber, _hookIndex) {
     return hook.handler();
   }
   return () => { };
+}
+
+// 处理所有的useEffect
+function dealWithAllEffect(wipFiber) {
+  const hooks = (wipFiber && wipFiber.hooks) || [];
+  for (let i = 0; i < hooks.length; i++) {
+    if (hooks[i].handler) { // 确保是useEffect
+      const callback = dispatchSingleEffect(wipFiber, i);
+      if (wipFiber.effectTag === "DELETION") {
+        callback();
+      }
+    }
+  }
 }
 
 function commitRoot() {
@@ -146,7 +159,9 @@ function commitWork(fiber) {
   } else if (fiber.effectTag === "DELETION") {
     commitDeletion(fiber, domParent);
   }
-  dispatchUseEffect(fiber, hookIndex - 1);
+
+  dealWithAllEffect(fiber);
+
   commitWork(fiber.child);
   commitWork(fiber.sibling);
 }
@@ -236,7 +251,6 @@ function reconcileChildren(wipFiber, elements) {
     index++;
   }
 }
-
 
 function updateFunctionComponent(fiber) {
   wipFiber = fiber;
