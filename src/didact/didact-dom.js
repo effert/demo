@@ -14,6 +14,19 @@ const isNew = (prev, next) => key =>
   prev[key] !== next[key];
 const isGone = (prev, next) => key => !(key in next);
 
+const transFormCamelCase = (str) => {
+  let reg = /[A-Z]/g;
+  let matchArr = str.match(reg);
+  if (matchArr) {
+    for (let i of matchArr) {
+      str = str.replace(i, `-${i.toLowerCase()}`);
+      console.log(212, i.toLowerCase(), str);
+
+    }
+  }
+  return str;
+};
+
 
 function removeEvent(dom, prevProps, nextProps) {
   Object.keys(prevProps)
@@ -40,6 +53,18 @@ function addEvent(dom, prevProps, nextProps) {
     });
 }
 
+function transformStyle(nextProps, name) {
+  let styleString = '';
+  Object.keys(nextProps[name]).forEach(key => {
+    let value = nextProps[name][key];
+    if (typeof value === 'number') {
+      value += 'px';
+    }
+    styleString += `${transFormCamelCase(key)}:${value};`;
+  });
+  return styleString;
+}
+
 function updateDom(dom, prevProps, nextProps) {
   removeEvent(dom, prevProps, nextProps);
   addEvent(dom, prevProps, nextProps);
@@ -57,7 +82,11 @@ function updateDom(dom, prevProps, nextProps) {
     .filter(isProperty)
     .filter(isNew(prevProps, nextProps))
     .forEach(name => {
-      dom[name] = nextProps[name];
+      if (name === 'style') { // 支持style属性
+        dom[name] = transformStyle(nextProps, name);
+      } else {
+        dom[name] = nextProps[name];
+      }
     });
 }
 

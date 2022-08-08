@@ -37,7 +37,7 @@ const Test = () => {
 
   return (
     <div id="foo">
-      <div>count:{count}</div>
+      <div style={{ color: 'red', fontSize: 20 }}>count:{count}</div>
       <div><button onClick={() => changeCount(c => c + 1)}>add</button></div>
       <div><button onClick={() => changeCount(c => c - 1)}>reduce</button></div>
       text
