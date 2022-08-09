@@ -26,10 +26,10 @@ import DidactDom from '../src/didact/didact-dom';
 // const element = (
 //   <div id="foo">
 //     <div>bar</div>
-//     <b/>
+//     <b />
 //     123
 //   </div>
-// )
+// );
 
 const Child = () => {
   useEffect(() => {
