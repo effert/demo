@@ -161,7 +161,11 @@ function commitWork(fiber) {
   }
 
   dealWithAllEffect(fiber);
-  fiber.effectTag = ''; // todo fix:清除effectTag
+
+  // 由于commitWork push进来的是oldFiber，所以这个oldFiber上的child存在effectTag
+  // 导致执行 deletions.forEach(commitWork) 的时候会去commitWork他的child和sibling
+  // 所以需要手动清除effectTag
+  fiber.effectTag = ''; // fix:清除effectTag
 
   commitWork(fiber.child);
   commitWork(fiber.sibling);
@@ -235,7 +239,6 @@ function reconcileChildren(wipFiber, elements) {
     }
     if (oldFiber && !sameType) { // delete
       oldFiber.effectTag = "DELETION";
-      // oldFiber.child = null; // todo fix
       deletions.push(oldFiber);
     }
 
