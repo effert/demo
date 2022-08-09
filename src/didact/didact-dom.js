@@ -161,7 +161,7 @@ function commitWork(fiber) {
   }
 
   dealWithAllEffect(fiber);
-  fiber.effectTag = ''; // fix:清除effectTag
+  fiber.effectTag = ''; // todo fix:清除effectTag
 
   commitWork(fiber.child);
   commitWork(fiber.sibling);
@@ -235,6 +235,7 @@ function reconcileChildren(wipFiber, elements) {
     }
     if (oldFiber && !sameType) { // delete
       oldFiber.effectTag = "DELETION";
+      // oldFiber.child = null; // todo fix
       deletions.push(oldFiber);
     }
 

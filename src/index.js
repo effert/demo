@@ -63,7 +63,7 @@ const Test = () => {
       <b />
       <div>
         {
-          show ? <Child /> : ''
+          show ? <Child /> : null
         }
       </div>
       {
