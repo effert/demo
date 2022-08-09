@@ -145,7 +145,7 @@ function commitWork(fiber) {
     fiber.effectTag === "PLACEMENT" &&
     fiber.dom != null
   ) {
-    addEvent(fiber.dom, {}, fiber.props); // 添加事件
+    addEvent(fiber.dom, {}, fiber.props); // fix:添加事件
     domParent.appendChild(fiber.dom);
   } else if (
     fiber.effectTag === "UPDATE" &&
@@ -161,6 +161,7 @@ function commitWork(fiber) {
   }
 
   dealWithAllEffect(fiber);
+  fiber.effectTag = ''; // fix:清除effectTag
 
   commitWork(fiber.child);
   commitWork(fiber.sibling);
@@ -170,7 +171,7 @@ function commitDeletion(fiber, domParent) {
   let prevProps = fiber.alternate ? fiber.alternate.props : {}; // todo
 
   if (fiber.dom) {
-    removeEvent(fiber.dom, prevProps, {}); // 解绑事件
+    removeEvent(fiber.dom, prevProps, {}); //fix:解绑事件
     domParent.removeChild(fiber.dom);
   } else {
     commitDeletion(fiber.child, domParent);
