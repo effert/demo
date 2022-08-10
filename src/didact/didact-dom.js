@@ -296,12 +296,12 @@ function performUnitOfWork(fiber) {
     return fiber.child;
   }
   let nextFiber = fiber;
-  // completeWork(nextFiber);
+  completeWork(nextFiber);
   while (nextFiber) {
     if (nextFiber.sibling) {
       return nextFiber.sibling;
     }
-    // completeWork(nextFiber.parent);
+    completeWork(nextFiber.parent);
     nextFiber = nextFiber.parent;
   }
 }
