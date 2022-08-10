@@ -112,7 +112,7 @@ function dealWithAllEffect(wipFiber) {
   for (let i = 0; i < hooks.length; i++) {
     if (hooks[i].handler) { // 确保是useEffect
       const callback = dispatchSingleEffect(wipFiber, i);
-      if (wipFiber.effectTag === "DELETION") {
+      if (wipFiber.effectTag === "DELETION" && typeof callback === 'function') {
         callback();
       }
     }
