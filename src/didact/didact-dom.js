@@ -163,7 +163,7 @@ function commitWork(fiber) {
   dealWithAllEffect(fiber);
 
   // 由于commitWork push进来的是oldFiber，所以这个oldFiber上的child存在effectTag
-  // 导致执行 deletions.forEach(commitWork) 的时候会去commitWork他的child和sibling
+  // 导致执行 deletions.forEach(commitWork) 的时候会去commitWork这个oldFiber的child和sibling（which has the last effectTag）
   // 所以需要手动清除effectTag
   fiber.effectTag = ''; // fix:清除effectTag
 
