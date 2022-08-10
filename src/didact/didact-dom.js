@@ -261,7 +261,7 @@ function completeWork(fiber) {
   if (!fiber) {
     return;
   }
-  console.log(212, 'complete work!', fiber);
+  // todo move "create dom and appendTo parent" to here
 }
 
 function updateFunctionComponent(fiber) {
@@ -296,12 +296,12 @@ function performUnitOfWork(fiber) {
     return fiber.child;
   }
   let nextFiber = fiber;
-  completeWork(nextFiber);
+  // completeWork(nextFiber);
   while (nextFiber) {
     if (nextFiber.sibling) {
       return nextFiber.sibling;
     }
-    completeWork(nextFiber.parent);
+    // completeWork(nextFiber.parent);
     nextFiber = nextFiber.parent;
   }
 }
