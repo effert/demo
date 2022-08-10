@@ -257,6 +257,13 @@ function reconcileChildren(wipFiber, elements) {
   }
 }
 
+function completeWork(fiber) {
+  if (!fiber) {
+    return;
+  }
+  console.log(212, 'complete work!', fiber);
+}
+
 function updateFunctionComponent(fiber) {
   wipFiber = fiber;
   hookIndex = 0;
@@ -289,10 +296,12 @@ function performUnitOfWork(fiber) {
     return fiber.child;
   }
   let nextFiber = fiber;
+  completeWork(nextFiber);
   while (nextFiber) {
     if (nextFiber.sibling) {
       return nextFiber.sibling;
     }
+    completeWork(nextFiber.parent);
     nextFiber = nextFiber.parent;
   }
 }
