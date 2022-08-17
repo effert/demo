@@ -158,6 +158,9 @@ function commitWork(fiber) {
     );
   } else if (fiber.effectTag === "DELETION") {
     commitDeletion(fiber, domParent);
+  } else if (fiber.effectTag === 'MOVE') {
+    // todo
+    console.log('%cdidact-dom.js line:162 212, fiber', 'color: #007acc;', 212, fiber);
   }
 
   dealWithAllEffect(fiber);
@@ -196,6 +199,229 @@ function workLoop(deadline) {
   }
   // 继续监听
   requestIdleCallback(workLoop);
+}
+
+// diff 算法生成一级的fiber tree
+function reconcileChildFibers(wipFiber, elements) {
+  let oldFiber = wipFiber.alternate && wipFiber.alternate.child;
+
+  if (elements.length === 0) {
+    while (oldFiber) {
+      oldFiber.effectTag = "DELETION";
+      deletions.push(oldFiber);
+      oldFiber = oldFiber.sibling;
+    }
+  } else if (elements.length === 1) {
+    reconcileSingleElement(wipFiber, elements[0]);
+  } else {
+    // reconcileChildren(wipFiber, elements);
+    reconcileMultiElement(wipFiber, elements);
+  }
+}
+
+function reconcileSingleElement(wipFiber, element) {
+  let oldFiber = wipFiber.alternate && wipFiber.alternate.child;
+  const { key } = element.props;
+  let newFiber;
+  const sameType =
+    oldFiber &&
+    element &&
+    element.type === oldFiber.type;
+  while (oldFiber) {
+    const { oldKey } = oldFiber.props;
+    if (key === oldKey || !key) { // 或不存在key的情况
+      if (sameType) { // key和type都相同的话 可以复用
+        newFiber = {
+          type: oldFiber.type,
+          props: element.props,
+          dom: oldFiber.dom,
+          parent: wipFiber,
+          alternate: oldFiber,
+          effectTag: "UPDATE",
+        };
+      } else {
+        // key相同 type不同 新增fiber并删除oldFiber以及他的所有兄弟节点
+        // 因为唯一存在的新节点在老节点中都对应不上，那么所有老节点都可以删掉
+        newFiber = {
+          type: element.type,
+          props: element.props,
+          dom: null,
+          parent: wipFiber,
+          alternate: null,
+          effectTag: "PLACEMENT",
+        };
+        oldFiber.effectTag = "DELETION";
+        deletions.push(oldFiber);
+      }
+    } else {
+      // key没对应上时，继续遍历老节点
+      oldFiber.effectTag = "DELETION";
+      deletions.push(oldFiber);
+    }
+    oldFiber = oldFiber.sibling;
+  }
+  if (!newFiber) {
+    newFiber = {
+      type: element.type,
+      props: element.props,
+      dom: null,
+      parent: wipFiber,
+      alternate: null,
+      effectTag: "PLACEMENT",
+    };
+  }
+  wipFiber.child = newFiber;
+}
+
+// 遍历两轮
+// 第一轮处理更新的节点
+// 第二轮处理其他剩余的节点
+function reconcileMultiElement(wipFiber, elements) {
+  let oldFiber = wipFiber.alternate && wipFiber.alternate.child;
+  let index = 0;
+  let newFiber;
+  let prevSibling = null;
+  let oldKey = null;
+  let lastPlacedIndex = 0; // 最后一个可复用的节点在oldFiber中的位置索引
+  let oldIndex = 0; // 遍历到的可复用节点在oldFiber中的位置索引
+  if (oldFiber && oldFiber.props) {
+    oldKey = oldFiber.props.key;
+  }
+  if (oldKey) {
+    // 第一轮遍历
+    while (oldFiber && index < elements.length) {
+      const element = elements[index];
+      const { key } = element.props;
+      if (oldFiber.props) {
+        oldKey = oldFiber.props.key;
+      }
+      const sameType =
+        oldFiber &&
+        element &&
+        element.type === oldFiber.type;
+      if (key === oldKey) {
+        if (sameType) {
+          newFiber = {
+            type: oldFiber.type,
+            props: element.props,
+            dom: oldFiber.dom,
+            parent: wipFiber,
+            alternate: oldFiber,
+            effectTag: "UPDATE",
+          };
+          lastPlacedIndex = index;
+        } else {
+          oldFiber.effectTag = "DELETION";
+          deletions.push(oldFiber);
+        }
+      } else {
+        break;
+      }
+      if (oldFiber) {
+        oldFiber = oldFiber.sibling;
+      }
+
+      if (index === 0) {
+        wipFiber.child = newFiber;
+      } else if (element) {
+        prevSibling.sibling = newFiber;
+      }
+
+      prevSibling = newFiber;
+      index++;
+    }
+    // 第二轮遍历
+    // 1.newChildren与oldFiber同时遍历完
+    // diff 结束
+
+    // 2.newChildren没遍历完，oldFiber遍历完
+    // 将剩下的newChildren都标记为 PLACEMENT
+    if (index < elements.length && !oldFiber) {
+      while (index < elements.length) {
+        const element = elements[index];
+        newFiber = {
+          type: element.type,
+          props: element.props,
+          dom: null,
+          parent: wipFiber,
+          alternate: null,
+          effectTag: "PLACEMENT",
+        };
+        if (index === 0) {
+          wipFiber.child = newFiber;
+        } else if (element) {
+          prevSibling.sibling = newFiber;
+        }
+        index++;
+      }
+    }
+    // 3.newChildren遍历完，oldFiber没遍历完
+    // 将剩下的oldFiber都标记为 DELETION
+    if (oldFiber && index >= elements.length) {
+      oldFiber.effectTag = "DELETION";
+      deletions.push(oldFiber);
+      oldFiber = oldFiber.sibling;
+    }
+    // 4.newChildren与oldFiber都没遍历完
+    if (oldFiber && index < elements.length) {
+      const existingChildren = mapRemainingChildren(oldFiber, index);
+      while (index < elements.length) {
+        const element = elements[index];
+        if (existingChildren.has(element.props.key)) {
+          oldIndex = existingChildren.get(element.props.key).index;
+          if (oldIndex >= lastPlacedIndex) {
+            lastPlacedIndex = oldIndex;
+            prevSibling.sibling = {
+              type: oldFiber.type,
+              props: element.props,
+              dom: oldFiber.dom,
+              parent: wipFiber,
+              alternate: oldFiber,
+              effectTag: "UPDATE",
+            };
+          } else {
+            prevSibling.sibling = {
+              type: oldFiber.type,
+              props: element.props,
+              dom: oldFiber.dom,
+              parent: wipFiber,
+              alternate: oldFiber,
+              effectTag: "MOVE",
+              moveIndex: lastPlacedIndex,
+            };
+          }
+        }
+        index++;
+      }
+    }
+  } else {
+    reconcileChildren(wipFiber, elements);
+  }
+}
+
+function mapRemainingChildren(
+  currentFirstChild,
+  index, // 第一次循环跳出时的位置
+) {
+  // Add the remaining children to a temporary map so that we can find them by
+  // keys quickly. Implicit (null) keys get added to this set with their index
+  // instead.
+  const existingChildren = new Map();
+
+  let existingChild = currentFirstChild;
+  while (existingChild) {
+    if (existingChild.props.key !== null) {
+      existingChild.index = index;
+      index++;
+      existingChildren.set(existingChild.props.key, existingChild);
+    } else {
+      existingChild.index = index;
+      index++;
+      existingChildren.set(existingChild.index, existingChild);
+    }
+    existingChild = existingChild.sibling;
+  }
+  return existingChildren;
 }
 
 // 根据fiber.props.children形成fiber tree
@@ -269,14 +495,14 @@ function updateFunctionComponent(fiber) {
   hookIndex = 0;
   wipFiber.hooks = [];
   const children = [fiber.type(fiber.props)];
-  reconcileChildren(fiber, children.flat()); // 注意：这里函数组件的fiber是没有dom的
+  reconcileChildFibers(fiber, children.flat()); // 注意：这里函数组件的fiber是没有dom的
 }
 
 function updateHostComponent(fiber) {
   if (!fiber.dom) {
     fiber.dom = createDom(fiber);
   }
-  reconcileChildren(fiber, fiber.props.children.flat());
+  reconcileChildFibers(fiber, fiber.props.children.flat());
 }
 
 // 每次只更新一级的fiber子树，这一个任务是不可打断的

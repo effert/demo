@@ -45,6 +45,8 @@ const Test = () => {
   let [count, changeCount] = useState(0);
   let [show, changeShow] = useState(false);
   let arr = new Array(count > 0 ? count : 0).fill(0);
+  let keyArr1 = ['a', 'b', 'c', 'd'];
+  let keyArr2 = ['a', 'c', 'd', 'b'];
 
   useEffect(() => {
     console.log('useEffect');
@@ -63,9 +65,14 @@ const Test = () => {
       <b />
       <div>
         {
-          show ? <Child /> : null
+          show ? <Child /> : ''
         }
       </div>
+      <ul>
+        {
+          show ? keyArr2.map((val) => <li key={val}>{val}</li>) : keyArr1.map((val) => <li key={val}>{val}</li>)
+        }
+      </ul>
       {
         arr.map((val, index) => <div id={index}>{index}</div>)
       }
