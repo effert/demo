@@ -214,8 +214,8 @@ function reconcileChildFibers(wipFiber, elements) {
   } else if (elements.length === 1) {
     reconcileSingleElement(wipFiber, elements[0]);
   } else {
-    // reconcileChildren(wipFiber, elements);
-    reconcileMultiElement(wipFiber, elements);
+    reconcileChildren(wipFiber, elements);
+    // reconcileMultiElement(wipFiber, elements);
   }
 }
 
