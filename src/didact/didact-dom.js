@@ -215,6 +215,7 @@ function reconcileChildFibers(wipFiber, elements) {
     reconcileSingleElement(wipFiber, elements[0]);
   } else {
     reconcileChildren(wipFiber, elements);
+
     // reconcileMultiElement(wipFiber, elements);
   }
 }
