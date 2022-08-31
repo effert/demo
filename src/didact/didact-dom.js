@@ -523,12 +523,12 @@ function performUnitOfWork(fiber) {
     return fiber.child;
   }
   let nextFiber = fiber;
-  completeWork(nextFiber);
+  completeWork(nextFiber); // feat
   while (nextFiber) {
     if (nextFiber.sibling) {
       return nextFiber.sibling;
     }
-    completeWork(nextFiber.parent);
+    completeWork(nextFiber.parent); // feat
     nextFiber = nextFiber.parent;
   }
 }
