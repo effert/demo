@@ -214,7 +214,7 @@ function reconcileChildFibers(wipFiber, elements) {
   } else if (elements.length === 1) {
     reconcileSingleElement(wipFiber, elements[0]);
   } else {
-    reconcileChildren(wipFiber, elements);
+    reconcileChildren(wipFiber, elements); // todo need use reconcileMultiElement
 
     // reconcileMultiElement(wipFiber, elements);
   }
