@@ -214,9 +214,13 @@ function reconcileChildFibers(wipFiber, elements) {
   } else if (elements.length === 1) {
     reconcileSingleElement(wipFiber, elements[0]);
   } else {
-    reconcileChildren(wipFiber, elements); // todo need use reconcileMultiElement
-
-    // reconcileMultiElement(wipFiber, elements);
+    let oldFiber = wipFiber.alternate && wipFiber.alternate.child;
+    let oldKey = oldFiber && oldFiber.props.key;
+    if (oldKey) { // 利用key对diff过程进行优化
+      reconcileMultiElement(wipFiber, elements);
+    } else {
+      reconcileChildren(wipFiber, elements); // todo need use reconcileMultiElement
+    }
   }
 }
 
@@ -274,6 +278,11 @@ function reconcileSingleElement(wipFiber, element) {
   wipFiber.child = newFiber;
 }
 
+/**
+ * 用key来对diff过程进行优化
+ * @param {*} wipFiber
+ * @param {*} elements
+ */
 // 遍历两轮
 // 第一轮处理更新的节点
 // 第二轮处理其他剩余的节点
@@ -425,6 +434,11 @@ function mapRemainingChildren(
   return existingChildren;
 }
 
+/**
+ * 对于没有key的情况下的处理
+ * @param {*} wipFiber
+ * @param {*} elements
+ */
 // 根据fiber.props.children形成fiber tree
 function reconcileChildren(wipFiber, elements) {
   let index = 0;
@@ -506,7 +520,7 @@ function updateHostComponent(fiber) {
   reconcileChildFibers(fiber, fiber.props.children.flat());
 }
 
-// 每次只更新一级的fiber子树，这一个任务是不可打断的
+// 每次只更新一个fiber节点，这一个任务是不可打断的
 function performUnitOfWork(fiber) {
   const isFunctionComponent = fiber.type instanceof Function;
 
@@ -518,7 +532,7 @@ function performUnitOfWork(fiber) {
 
   // return next unit of work
   // We first try with the child, then with the sibling, then with the uncle, and so on.
-  // 向下或者向右继续遍历，都没有就向上找uncle
+  // 向下或者向右继续遍历，都没有就向上找uncle，直到回到root fiber
   if (fiber.child) {
     return fiber.child;
   }
