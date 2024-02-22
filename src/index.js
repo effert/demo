@@ -45,8 +45,8 @@ const Test = () => {
   let [count, changeCount] = useState(0);
   let [show, changeShow] = useState(false);
   let arr = new Array(count > 0 ? count : 0).fill(0);
-  let keyArr1 = ['a', 'b', 'c', 'd'];
-  let keyArr2 = ['a', 'c', 'd', 'b'];
+  let keyArr1 = ['a', 'b', 'c', 'd', 'f'];
+  let keyArr2 = ['a', 'c', 'd', 'b', 'f'];
 
   useEffect(() => {
     console.log('useEffect');
@@ -68,6 +68,13 @@ const Test = () => {
           show ? <Child /> : ''
         }
       </div>
+      <div>without key:</div>
+      <ul>
+        {
+          show ? keyArr2.map((val) => <li>{val}</li>) : keyArr1.map((val) => <li>{val}</li>)
+        }
+      </ul>
+      <div>with key:</div>
       <ul>
         {
           show ? keyArr2.map((val) => <li key={val}>{val}</li>) : keyArr1.map((val) => <li key={val}>{val}</li>)

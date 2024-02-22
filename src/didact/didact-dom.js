@@ -159,8 +159,7 @@ function commitWork(fiber) {
   } else if (fiber.effectTag === "DELETION") {
     commitDeletion(fiber, domParent);
   } else if (fiber.effectTag === 'MOVE') {
-    // todo
-    console.log('%cdidact-dom.js line:162 212, fiber', 'color: #007acc;', 212, fiber);
+    moveDom(fiber)
   }
 
   dealWithAllEffect(fiber);
@@ -172,6 +171,32 @@ function commitWork(fiber) {
 
   commitWork(fiber.child);
   commitWork(fiber.sibling);
+}
+
+/**
+ * 移动fiber的位置
+ * @param {*} fiber
+ */
+function moveDom(fiber) {
+  let domParentFiber = fiber.parent;
+  while (!domParentFiber.dom) {
+    domParentFiber = domParentFiber.parent;
+  }
+  const domParent = domParentFiber.dom;
+
+  // 删除原来的元素
+  commitDeletion(fiber, domParent);
+
+  let referenceFiber = fiber.parent.alternate.child;
+  while (referenceFiber?.index !== fiber.moveIndex) {
+    referenceFiber = referenceFiber.sibling;
+  }
+  // 添加到正确的位置
+  if (referenceFiber.sibling) {
+    domParent.insertBefore(fiber.dom, referenceFiber.sibling.dom);
+  } else { // 说明是最后一个元素
+    domParent.appendChild(fiber.dom);
+  }
 }
 
 function commitDeletion(fiber, domParent) {
@@ -316,6 +341,7 @@ function reconcileMultiElement(wipFiber, elements) {
             parent: wipFiber,
             alternate: oldFiber,
             effectTag: "UPDATE",
+            index,
           };
           lastPlacedIndex = index;
         } else {
@@ -354,12 +380,14 @@ function reconcileMultiElement(wipFiber, elements) {
           parent: wipFiber,
           alternate: null,
           effectTag: "PLACEMENT",
+          index,
         };
         if (index === 0) {
           wipFiber.child = newFiber;
         } else if (element) {
           prevSibling.sibling = newFiber;
         }
+        prevSibling = newFiber;
         index++;
       }
     }
@@ -378,29 +406,38 @@ function reconcileMultiElement(wipFiber, elements) {
       while (index < elements.length) {
         const element = elements[index];
         if (existingChildren.has(element.props.key)) {
-          oldIndex = existingChildren.get(element.props.key).index;
+          oldFiber = existingChildren.get(element.props.key)
+          oldIndex = oldFiber.index;
           if (oldIndex >= lastPlacedIndex) {
             lastPlacedIndex = oldIndex;
-            prevSibling.sibling = {
+            newFiber = {
               type: oldFiber.type,
-              props: element.props,
+              props: oldFiber.props,
               dom: oldFiber.dom,
               parent: wipFiber,
               alternate: oldFiber,
               effectTag: "UPDATE",
-            };
+              index: oldIndex,
+            }
           } else {
-            prevSibling.sibling = {
+            newFiber = {
               type: oldFiber.type,
-              props: element.props,
+              props: oldFiber.props,
               dom: oldFiber.dom,
               parent: wipFiber,
               alternate: oldFiber,
               effectTag: "MOVE",
               moveIndex: lastPlacedIndex,
-            };
+              index: oldIndex,
+            }
           }
         }
+        if (index === 0) {
+          wipFiber.child = newFiber;
+        } else if (element) {
+          prevSibling.sibling = newFiber;
+        }
+        prevSibling = newFiber;
         index++;
       }
     }
