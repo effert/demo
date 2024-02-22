@@ -145,7 +145,7 @@ function commitWork(fiber) {
     fiber.effectTag === "PLACEMENT" &&
     fiber.dom != null
   ) {
-    addEvent(fiber.dom, {}, fiber.props); // fix:添加事件
+    addEvent(fiber.dom, {}, fiber.props); // fixed:添加事件
     domParent.appendChild(fiber.dom);
   } else if (
     fiber.effectTag === "UPDATE" &&
@@ -168,7 +168,7 @@ function commitWork(fiber) {
   // 由于commitWork push进来的是oldFiber，所以这个oldFiber上的child存在effectTag
   // 导致执行 deletions.forEach(commitWork) 的时候会去commitWork这个oldFiber的child和sibling（which has the last effectTag）
   // 所以需要手动清除effectTag
-  fiber.effectTag = ''; // fix:清除effectTag
+  fiber.effectTag = ''; // fixed:清除effectTag
 
   commitWork(fiber.child);
   commitWork(fiber.sibling);
@@ -178,7 +178,7 @@ function commitDeletion(fiber, domParent) {
   let prevProps = fiber.alternate ? fiber.alternate.props : {};
 
   if (fiber.dom) {
-    removeEvent(fiber.dom, prevProps, {}); //fix:解绑事件
+    removeEvent(fiber.dom, prevProps, {}); //fixed:解绑事件
     domParent.removeChild(fiber.dom);
   } else {
     commitDeletion(fiber.child, domParent);
@@ -219,7 +219,7 @@ function reconcileChildFibers(wipFiber, elements) {
     if (oldKey) { // 利用key对diff过程进行优化
       reconcileMultiElement(wipFiber, elements);
     } else {
-      reconcileChildren(wipFiber, elements); // todo need use reconcileMultiElement
+      reconcileChildren(wipFiber, elements);
     }
   }
 }
@@ -302,9 +302,7 @@ function reconcileMultiElement(wipFiber, elements) {
     while (oldFiber && index < elements.length) {
       const element = elements[index];
       const { key } = element.props;
-      if (oldFiber.props) {
-        oldKey = oldFiber.props.key;
-      }
+
       const sameType =
         oldFiber &&
         element &&
@@ -368,9 +366,11 @@ function reconcileMultiElement(wipFiber, elements) {
     // 3.newChildren遍历完，oldFiber没遍历完
     // 将剩下的oldFiber都标记为 DELETION
     if (oldFiber && index >= elements.length) {
-      oldFiber.effectTag = "DELETION";
-      deletions.push(oldFiber);
-      oldFiber = oldFiber.sibling;
+      while (oldFiber) {
+        oldFiber.effectTag = "DELETION";
+        deletions.push(oldFiber);
+        oldFiber = oldFiber.sibling;
+      }
     }
     // 4.newChildren与oldFiber都没遍历完
     if (oldFiber && index < elements.length) {
@@ -414,19 +414,16 @@ function mapRemainingChildren(
   index, // 第一次循环跳出时的位置
 ) {
   // Add the remaining children to a temporary map so that we can find them by
-  // keys quickly. Implicit (null) keys get added to this set with their index
-  // instead.
+  // keys quickly. Implicit (null) keys get added to this set with their index instead.
   const existingChildren = new Map();
 
   let existingChild = currentFirstChild;
   while (existingChild) {
+    existingChild.index = index;
+    index++;
     if (existingChild.props.key !== null) {
-      existingChild.index = index;
-      index++;
       existingChildren.set(existingChild.props.key, existingChild);
     } else {
-      existingChild.index = index;
-      index++;
       existingChildren.set(existingChild.index, existingChild);
     }
     existingChild = existingChild.sibling;
@@ -435,7 +432,7 @@ function mapRemainingChildren(
 }
 
 /**
- * 对于没有key的情况下的处理
+ * 对于没有key的情况下的diff处理
  * @param {*} wipFiber
  * @param {*} elements
  */
@@ -448,7 +445,7 @@ function reconcileChildren(wipFiber, elements) {
 
   // 形成单向链表
   while (index < elements.length ||
-    oldFiber != null // 删除节点的情况
+    oldFiber != null // 删除节点的情况(elements已经遍历完了，但是oldFiber还存在)
   ) {
     const element = elements[index];
     let newFiber = null;
