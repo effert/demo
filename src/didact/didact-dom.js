@@ -89,7 +89,7 @@ function updateDom(dom, prevProps, nextProps) {
     });
 }
 
-function dispatchSingleEffect(wipFiber, _hookIndex) {
+function dispatchSingleEffect(wipFiber, _hookIndex, isLayout) {
   const oldHook =
     wipFiber.alternate &&
     wipFiber.alternate.hooks &&
@@ -98,9 +98,15 @@ function dispatchSingleEffect(wipFiber, _hookIndex) {
 
   if (oldHook && hook) {
     if (!isEqualArray(oldHook.deps, hook.deps) || !oldHook.deps || !hook.deps) {
+      if (isLayout) {
+        return hook.layoutHandler()
+      }
       return hook.handler();
     }
   } else if (!oldHook && hook) { // mount 阶段
+    if (isLayout) {
+      return hook.layoutHandler()
+    }
     return hook.handler();
   }
   return () => { };
@@ -112,6 +118,19 @@ function dealWithAllEffect(wipFiber) {
   for (let i = 0; i < hooks.length; i++) {
     if (hooks[i].handler) { // 确保是useEffect
       const callback = dispatchSingleEffect(wipFiber, i);
+      if (wipFiber.effectTag === "DELETION" && typeof callback === 'function') {
+        callback();
+      }
+    }
+  }
+}
+
+// 处理所有的useLayoutEffect
+function dealWithAllLayoutEffect(wipFiber) {
+  const hooks = (wipFiber && wipFiber.hooks) || [];
+  for (let i = 0; i < hooks.length; i++) {
+    if (hooks[i].layoutHandler) { // 确保是useLayoutEffect
+      const callback = dispatchSingleEffect(wipFiber, i, true);
       if (wipFiber.effectTag === "DELETION" && typeof callback === 'function') {
         callback();
       }
@@ -140,6 +159,9 @@ function commitWork(fiber) {
     domParentFiber = domParentFiber.parent;
   }
   const domParent = domParentFiber.dom;
+
+  // 处理useLayoutEffect，因为useLayoutEffect是在dom更新之前执行的
+  dealWithAllLayoutEffect(fiber);
 
   if (
     fiber.effectTag === "PLACEMENT" &&
@@ -631,6 +653,15 @@ export function useState(initial) {
 export function useEffect(handler, deps) {
   const hook = {
     handler,
+    deps,
+  };
+  wipFiber.hooks.push(hook);
+  hookIndex++;
+}
+
+export function useLayoutEffect(handler, deps) {
+  const hook = {
+    layoutHandler: handler,
     deps,
   };
   wipFiber.hooks.push(hook);

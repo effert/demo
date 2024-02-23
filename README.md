@@ -6,7 +6,8 @@
 
 ## add feature and fix bugs
 
-- ✅ use an object for the style prop
-- ✅ flatten children arrays
+- ✅ support style prop
+- ✅ (fix bug)flatten children arrays
 - ✅ useEffect hook
+- ✅ useLayoutEffect hook
 - ✅ reconciliation by key

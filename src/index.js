@@ -18,7 +18,7 @@
 
 
 
-import Didact, { useState, useEffect } from '../src/didact';
+import Didact, { useState, useEffect, useLayoutEffect } from '../src/didact';
 import DidactDom from '../src/didact/didact-dom';
 
 /** @jsx Didact.createElement */
@@ -52,6 +52,13 @@ const Test = () => {
     console.log('useEffect');
     return () => {
       console.log('callback');
+    };
+  }, [count, show]);
+
+  useLayoutEffect(() => {
+    console.log('useLayoutEffect');
+    return () => {
+      console.log('useLayoutEffect callback');
     };
   }, [count, show]);
 
