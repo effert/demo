@@ -619,7 +619,7 @@ export function useState(initial) {
       props: currentRoot.props,
       alternate: currentRoot,
     };
-    nextUnitOfWork = wipRoot; // 启动更新
+    nextUnitOfWork = wipRoot; // 启动更新，重新渲染时会再次执行useState，也就会执行hook里面的queue
     deletions = [];
   };
 
