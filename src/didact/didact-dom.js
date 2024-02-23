@@ -174,7 +174,7 @@ function commitWork(fiber) {
 }
 
 /**
- * 移动fiber的位置
+ * 移动dom的位置
  * @param {*} fiber
  */
 function moveDom(fiber) {
@@ -226,7 +226,7 @@ function workLoop(deadline) {
   requestIdleCallback(workLoop);
 }
 
-// diff 算法生成一级的fiber tree
+// 把一个fiber节点下的children和新的children进行diff
 function reconcileChildFibers(wipFiber, elements) {
   let oldFiber = wipFiber.alternate && wipFiber.alternate.child;
 
@@ -554,7 +554,7 @@ function updateHostComponent(fiber) {
   reconcileChildFibers(fiber, fiber.props.children.flat());
 }
 
-// 每次只更新一个fiber节点，这一个任务是不可打断的
+// 每次只更新一个fiber节点的children，这一个任务是不可打断的
 function performUnitOfWork(fiber) {
   const isFunctionComponent = fiber.type instanceof Function;
 
