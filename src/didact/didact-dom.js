@@ -344,127 +344,123 @@ function reconcileMultiElement(wipFiber, elements) {
   if (oldFiber && oldFiber.props) {
     oldKey = oldFiber.props.key;
   }
-  if (oldKey) {
-    // 第一轮遍历
-    while (oldFiber && index < elements.length) {
-      const element = elements[index];
-      const { key } = element.props;
+  // 第一轮遍历
+  while (oldFiber && index < elements.length) {
+    const element = elements[index];
+    const { key } = element.props;
 
-      const sameType =
-        oldFiber &&
-        element &&
-        element.type === oldFiber.type;
-      if (key === oldKey) {
-        if (sameType) {
-          newFiber = {
-            type: oldFiber.type,
-            props: element.props,
-            dom: oldFiber.dom,
-            parent: wipFiber,
-            alternate: oldFiber,
-            effectTag: "UPDATE",
-            index,
-          };
-          lastPlacedIndex = index;
-        } else {
-          oldFiber.effectTag = "DELETION";
-          deletions.push(oldFiber);
-        }
+    const sameType =
+      oldFiber &&
+      element &&
+      element.type === oldFiber.type;
+    if (key === oldKey) {
+      if (sameType) {
+        newFiber = {
+          type: oldFiber.type,
+          props: element.props,
+          dom: oldFiber.dom,
+          parent: wipFiber,
+          alternate: oldFiber,
+          effectTag: "UPDATE",
+          index,
+        };
+        lastPlacedIndex = index;
       } else {
-        break;
+        oldFiber.effectTag = "DELETION";
+        deletions.push(oldFiber);
       }
-      if (oldFiber) {
-        oldFiber = oldFiber.sibling;
-      }
+    } else {
+      break;
+    }
+    if (oldFiber) {
+      oldFiber = oldFiber.sibling;
+    }
 
+    if (index === 0) {
+      wipFiber.child = newFiber;
+    } else if (element) {
+      prevSibling.sibling = newFiber;
+    }
+
+    prevSibling = newFiber;
+    index++;
+  }
+  // 第二轮遍历
+  // 1.newChildren与oldFiber同时遍历完
+  // diff 结束
+
+  // 2.newChildren没遍历完，oldFiber遍历完
+  // 将剩下的newChildren都标记为 PLACEMENT
+  if (index < elements.length && !oldFiber) {
+    while (index < elements.length) {
+      const element = elements[index];
+      newFiber = {
+        type: element.type,
+        props: element.props,
+        dom: null,
+        parent: wipFiber,
+        alternate: null,
+        effectTag: "PLACEMENT",
+        index,
+      };
       if (index === 0) {
         wipFiber.child = newFiber;
       } else if (element) {
         prevSibling.sibling = newFiber;
       }
-
       prevSibling = newFiber;
       index++;
     }
-    // 第二轮遍历
-    // 1.newChildren与oldFiber同时遍历完
-    // diff 结束
-
-    // 2.newChildren没遍历完，oldFiber遍历完
-    // 将剩下的newChildren都标记为 PLACEMENT
-    if (index < elements.length && !oldFiber) {
-      while (index < elements.length) {
-        const element = elements[index];
-        newFiber = {
-          type: element.type,
-          props: element.props,
-          dom: null,
-          parent: wipFiber,
-          alternate: null,
-          effectTag: "PLACEMENT",
-          index,
-        };
-        if (index === 0) {
-          wipFiber.child = newFiber;
-        } else if (element) {
-          prevSibling.sibling = newFiber;
-        }
-        prevSibling = newFiber;
-        index++;
-      }
+  }
+  // 3.newChildren遍历完，oldFiber没遍历完
+  // 将剩下的oldFiber都标记为 DELETION
+  if (oldFiber && index >= elements.length) {
+    while (oldFiber) {
+      oldFiber.effectTag = "DELETION";
+      deletions.push(oldFiber);
+      oldFiber = oldFiber.sibling;
     }
-    // 3.newChildren遍历完，oldFiber没遍历完
-    // 将剩下的oldFiber都标记为 DELETION
-    if (oldFiber && index >= elements.length) {
-      while (oldFiber) {
-        oldFiber.effectTag = "DELETION";
-        deletions.push(oldFiber);
-        oldFiber = oldFiber.sibling;
-      }
-    }
-    // 4.newChildren与oldFiber都没遍历完
-    if (oldFiber && index < elements.length) {
-      const existingChildren = mapRemainingChildren(oldFiber, index);
-      while (index < elements.length) {
-        const element = elements[index];
-        if (existingChildren.has(element.props.key)) {
-          oldFiber = existingChildren.get(element.props.key)
-          oldIndex = oldFiber.index;
-          if (oldIndex >= lastPlacedIndex) {
-            lastPlacedIndex = oldIndex;
-            newFiber = {
-              type: oldFiber.type,
-              props: oldFiber.props,
-              dom: oldFiber.dom,
-              parent: wipFiber,
-              alternate: oldFiber,
-              effectTag: "UPDATE",
-              index: oldIndex,
-            }
-          } else {
-            newFiber = {
-              type: oldFiber.type,
-              props: oldFiber.props,
-              dom: oldFiber.dom,
-              parent: wipFiber,
-              alternate: oldFiber,
-              effectTag: "MOVE",
-              moveIndex: lastPlacedIndex,
-              index: oldIndex,
-            }
+  }
+  // 4.newChildren与oldFiber都没遍历完
+  if (oldFiber && index < elements.length) {
+    const existingChildren = mapRemainingChildren(oldFiber, index);
+    while (index < elements.length) {
+      const element = elements[index];
+      if (existingChildren.has(element.props.key)) {
+        oldFiber = existingChildren.get(element.props.key)
+        oldIndex = oldFiber.index;
+        if (oldIndex >= lastPlacedIndex) {
+          lastPlacedIndex = oldIndex;
+          newFiber = {
+            type: oldFiber.type,
+            props: oldFiber.props,
+            dom: oldFiber.dom,
+            parent: wipFiber,
+            alternate: oldFiber,
+            effectTag: "UPDATE",
+            index: oldIndex,
+          }
+        } else {
+          newFiber = {
+            type: oldFiber.type,
+            props: oldFiber.props,
+            dom: oldFiber.dom,
+            parent: wipFiber,
+            alternate: oldFiber,
+            effectTag: "MOVE",
+            moveIndex: lastPlacedIndex,
+            index: oldIndex,
           }
         }
-        if (index === 0) {
-          wipFiber.child = newFiber;
-        } else if (element) {
-          prevSibling.sibling = newFiber;
-        }
-        prevSibling = newFiber;
-        index++;
       }
+      if (index === 0) {
+        wipFiber.child = newFiber;
+      } else if (element) {
+        prevSibling.sibling = newFiber;
+      }
+      prevSibling = newFiber;
+      index++;
     }
-  } else {
-    reconcileChildren(wipFiber, elements);
   }
 }
 
